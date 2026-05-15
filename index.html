@@ -55,7 +55,7 @@
         <label class="field-wrap">
           <span>自定义成交折扣</span>
           <span class="input-box no-prefix">
-            <input id="customDiscount" min="0.1" max="10" step="0.1" type="number" />
+            <input id="customDiscount" min="1" max="10" step="0.1" type="number" />
             <strong>折</strong>
           </span>
         </label>
@@ -344,13 +344,28 @@
       return Math.ceil(value * 100) / 100;
     }
 
+    function normalizeDiscountInput() {
+      const input = document.getElementById("customDiscount");
+      const value = Number(input.value);
+      if (!Number.isFinite(value) || input.value === "") {
+        input.value = "1";
+        return 1;
+      }
+
+      const normalized = clamp(value, 1, 10);
+      if (normalized !== value) {
+        input.value = String(normalized);
+      }
+      return normalized;
+    }
+
     function calculate() {
       const purchaseCost = numberValue("purchaseCost");
       const shippingFee = numberValue("shippingFee");
       const freightInsurance = numberValue("freightInsurance");
       const targetProfit = numberValue("targetProfit");
       const returnRatePercent = numberValue("returnRate");
-      const customDiscount = clamp(numberValue("customDiscount"), 0.1, 10);
+      const customDiscount = normalizeDiscountInput();
       const promotionEnabled = document.getElementById("promotionSwitch").checked;
       const promotionRoi = promotionEnabled ? Math.max(numberValue("promotionRoi"), 1.01) : 0;
 
