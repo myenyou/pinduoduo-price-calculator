@@ -344,15 +344,20 @@
       return Math.ceil(value * 100) / 100;
     }
 
-    function normalizeDiscountInput() {
+    function getDiscountForCalculation() {
       const input = document.getElementById("customDiscount");
       const value = Number(input.value);
       if (!Number.isFinite(value) || input.value === "") {
-        input.value = "1";
         return 1;
       }
 
-      const normalized = clamp(value, 1, 10);
+      return clamp(value, 1, 10);
+    }
+
+    function normalizeDiscountInput() {
+      const input = document.getElementById("customDiscount");
+      const value = Number(input.value);
+      const normalized = Number.isFinite(value) && input.value !== "" ? clamp(value, 1, 10) : 1;
       if (normalized !== value) {
         input.value = String(normalized);
       }
@@ -365,7 +370,7 @@
       const freightInsurance = numberValue("freightInsurance");
       const targetProfit = numberValue("targetProfit");
       const returnRatePercent = numberValue("returnRate");
-      const customDiscount = normalizeDiscountInput();
+      const customDiscount = getDiscountForCalculation();
       const promotionEnabled = document.getElementById("promotionSwitch").checked;
       const promotionRoi = promotionEnabled ? Math.max(numberValue("promotionRoi"), 1.01) : 0;
 
@@ -433,6 +438,10 @@
 
     ids.forEach((id) => {
       document.getElementById(id).addEventListener("input", calculate);
+    });
+    document.getElementById("customDiscount").addEventListener("blur", () => {
+      normalizeDiscountInput();
+      calculate();
     });
     document.getElementById("promotionSwitch").addEventListener("change", () => {
       syncPromotionSwitch();
