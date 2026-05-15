@@ -364,6 +364,10 @@
       return normalized;
     }
 
+    function discountLabel(discount) {
+      return discount === 10 ? "不打折" : `${discount} 折`;
+    }
+
     function calculate() {
       const purchaseCost = numberValue("purchaseCost");
       const shippingFee = numberValue("shippingFee");
@@ -390,8 +394,8 @@
 
       document.getElementById("breakEvenListingPrice").textContent = money.format(breakEvenListingPrice);
       document.getElementById("profitListingPrice").textContent = money.format(profitListingPrice);
-      document.getElementById("breakEvenListingHint").textContent = `按 ${customDiscount} 折反推`;
-      document.getElementById("profitListingHint").textContent = `按 ${customDiscount} 折反推，利润 ${money.format(targetProfit)}`;
+      document.getElementById("breakEvenListingHint").textContent = `按${discountLabel(customDiscount)}反推`;
+      document.getElementById("profitListingHint").textContent = `按${discountLabel(customDiscount)}反推，利润 ${money.format(targetProfit)}`;
       document.getElementById("breakEvenDealPrice").textContent = money.format(breakEvenDealPrice);
       document.getElementById("profitDealPrice").textContent = money.format(profitDealPrice);
       document.getElementById("profitHint").textContent = `已包含目标利润 ${money.format(targetProfit)}。`;
