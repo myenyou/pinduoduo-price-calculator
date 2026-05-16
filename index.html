@@ -119,32 +119,10 @@ input {
   gap: 8px;
 }
 
-.mini-tabs {
-  display: inline-grid;
+.profit-input-grid {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  min-width: 128px;
-  gap: 2px;
-  border-radius: 6px;
-  background: #e2e8f0;
-  padding: 2px;
-}
-
-.mini-tab {
-  min-height: 24px;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: #475569;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 650;
-  white-space: nowrap;
-}
-
-.mini-tab.active {
-  background: #fff;
-  color: #0f172a;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  gap: 10px;
 }
 
 .input-box {
@@ -423,16 +401,16 @@ input {
         </label>
 
         <label class="field-wrap">
-          <span class="field-header">
-            <span>目标利润</span>
-            <span class="mini-tabs" aria-label="目标利润类型">
-              <button id="fixedProfitMode" class="mini-tab active" type="button" data-profit-mode="fixed">固定利润</button>
-              <button id="percentProfitMode" class="mini-tab" type="button" data-profit-mode="percent">百分比利润</button>
+          <span>目标利润</span>
+          <span class="profit-input-grid">
+            <span class="input-box">
+              <input id="fixedTargetProfit" aria-label="固定利润" min="0" step="0.1" type="number" />
+              <strong>元</strong>
             </span>
-          </span>
-          <span class="input-box">
-            <input id="targetProfit" min="0" step="0.1" type="number" />
-            <strong id="targetProfitUnit">元</strong>
+            <span class="input-box">
+              <input id="percentTargetProfit" aria-label="百分比利润" min="0" step="1" type="number" />
+              <strong>%</strong>
+            </span>
           </span>
         </label>
 
@@ -719,7 +697,8 @@ const defaults = {
   shippingFee: 4,
   freightInsurance: 2,
   returnRate: 50,
-  targetProfit: 5,
+  fixedTargetProfit: 5,
+  percentTargetProfit: 25,
   customDiscount: 10,
   promotionRoi: 0,
 };
@@ -835,30 +814,37 @@ function discountLabel(discount) {
   return discount === 10 ? "不打折" : `${discount} 折`;
 }
 
-function currentProfitMode() {
-  const active = document.querySelector(".mini-tab.active");
-  return active?.dataset.profitMode === "percent" ? "percent" : "fixed";
+function syncProfitInputs(source) {
+  const purchaseCost = numberValue("purchaseCost");
+  const fixedInput = document.getElementById("fixedTargetProfit");
+  const percentInput = document.getElementById("percentTargetProfit");
+
+  if (source === "percent") {
+    const fixedProfit = purchaseCost * numberValue("percentTargetProfit") / 100;
+    fixedInput.value = fixedProfit.toFixed(2);
+    return;
+  }
+
+  const percentProfit = purchaseCost > 0 ? numberValue("fixedTargetProfit") / purchaseCost * 100 : 0;
+  percentInput.value = percentProfit.toFixed(2);
 }
 
-function targetProfitValue(purchaseCost) {
-  const rawValue = numberValue("targetProfit");
-  return currentProfitMode() === "percent" ? purchaseCost * rawValue / 100 : rawValue;
-}
-
-function syncTargetProfitMode() {
-  const mode = currentProfitMode();
-  const unit = document.getElementById("targetProfitUnit");
-  const input = document.getElementById("targetProfit");
-
-  unit.textContent = mode === "percent" ? "%" : "元";
-  input.step = mode === "percent" ? "1" : "0.1";
+function targetProfitValue() {
+  return numberValue("fixedTargetProfit");
 }
 
 function calculate() {
+  const activeElement = document.activeElement;
+  if (activeElement?.id === "percentTargetProfit") {
+    syncProfitInputs("percent");
+  } else {
+    syncProfitInputs("fixed");
+  }
+
   const purchaseCost = numberValue("purchaseCost");
   const shippingFee = numberValue("shippingFee");
   const freightInsurance = numberValue("freightInsurance");
-  const targetProfit = targetProfitValue(purchaseCost);
+  const targetProfit = targetProfitValue();
   const returnRatePercent = numberValue("returnRate");
   if (currentPlatform() === "douyin") {
     douyinCouponValue = currentCouponAmount();
@@ -884,7 +870,6 @@ function calculate() {
   const breakEvenListingPrice = roundUpCent(breakEvenDealPrice / discountRate);
   const profitListingPrice = roundUpCent(profitDealPrice / discountRate);
 
-  syncTargetProfitMode();
   document.getElementById("breakEvenListingPrice").textContent = money.format(breakEvenListingPrice);
   document.getElementById("profitListingPrice").textContent = money.format(profitListingPrice);
   document.getElementById("breakEvenListingHint").textContent = `按${discountLabel(customDiscount)}反推`;
@@ -1051,24 +1036,6 @@ document.getElementById("customDiscount").addEventListener("blur", () => {
 document.getElementById("promotionSwitch").addEventListener("change", () => {
   syncPromotionSwitch();
   calculate();
-});
-
-document.querySelectorAll(".mini-tab").forEach((tab) => {
-  tab.addEventListener("click", () => {
-    const previousProfit = targetProfitValue(numberValue("purchaseCost"));
-    document.querySelectorAll(".mini-tab").forEach((item) => {
-      item.classList.toggle("active", item === tab);
-    });
-    const purchaseCost = numberValue("purchaseCost");
-    const input = document.getElementById("targetProfit");
-    if (currentProfitMode() === "percent") {
-      input.value = purchaseCost > 0 ? (previousProfit / purchaseCost * 100).toFixed(2) : "0";
-    } else {
-      input.value = previousProfit.toFixed(2);
-    }
-    syncTargetProfitMode();
-    calculate();
-  });
 });
 
 document.querySelectorAll(".logic-tab").forEach((tab) => {
