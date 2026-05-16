@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>价格计算器</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <nav class="logic-tabs" aria-label="平台">
+      <button id="pddPlatformTab" class="logic-tab active" type="button" data-platform="pdd">拼多多</button>
+      <button id="douyinPlatformTab" class="logic-tab" type="button" data-platform="douyin">抖音</button>
+    </nav>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>成本条件</h2>
+        </div>
+        <div class="switch-row">
+          <span>是否推广</span>
+          <label class="switch" aria-label="是否推广">
+            <input id="promotionSwitch" type="checkbox" />
+            <span></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <label class="field-wrap">
+          <span>拿货价</span>
+          <span class="input-box">
+            <input id="purchaseCost" min="0" step="0.1" type="number" />
+            <strong>元</strong>
+          </span>
+        </label>
+
+        <label class="field-wrap">
+          <span class="field-header">
+            <span>目标利润</span>
+            <span class="mini-tabs" aria-label="目标利润类型">
+              <button id="fixedProfitMode" class="mini-tab active" type="button" data-profit-mode="fixed">固定利润</button>
+              <button id="percentProfitMode" class="mini-tab" type="button" data-profit-mode="percent">百分比利润</button>
+            </span>
+          </span>
+          <span class="input-box">
+            <input id="targetProfit" min="0" step="0.1" type="number" />
+            <strong id="targetProfitUnit">元</strong>
+          </span>
+        </label>
+
+        <label class="field-wrap">
+          <span>运费</span>
+          <span class="input-box">
+            <input id="shippingFee" min="0" step="0.1" type="number" />
+            <strong>元</strong>
+          </span>
+        </label>
+
+        <label class="field-wrap">
+          <span>运费险</span>
+          <span class="input-box">
+            <input id="freightInsurance" min="0" step="0.1" type="number" />
+            <strong>元</strong>
+          </span>
+        </label>
+
+        <label class="field-wrap">
+          <span>退货率</span>
+          <span class="input-box">
+            <input id="returnRate" min="0" max="99" step="1" type="number" />
+            <strong>%</strong>
+          </span>
+        </label>
+
+        <label class="field-wrap">
+          <span id="pricingAdjustmentLabel">自定义成交折扣</span>
+          <span class="input-box">
+            <input id="customDiscount" min="1" max="10" step="0.1" type="number" />
+            <strong id="pricingAdjustmentUnit">折</strong>
+          </span>
+        </label>
+
+        <label class="field-wrap">
+          <span>实际投产比</span>
+          <span class="input-box">
+            <input id="promotionRoi" min="0" step="0.1" type="number" disabled />
+            <strong>ROI</strong>
+          </span>
+        </label>
+
+        <div id="promotionNotice" class="promotion-notice hidden"></div>
+      </div>
+    </section>
+
+    <section id="currentLogicPanel" class="results-section logic-panel hidden">
+      <div class="result-grid">
+        <article class="result-card result-card-profit">
+          <p class="result-label">带利润的拼单价</p>
+          <p id="profitListingPrice" class="result-value">¥0.00</p>
+          <p id="profitListingHint" class="result-hint">目标利润已计入</p>
+        </article>
+
+        <article class="result-card result-card-even">
+          <p class="result-label">不亏本拼单价</p>
+          <p id="breakEvenListingPrice" class="result-value">¥0.00</p>
+          <p id="breakEvenListingHint" class="result-hint">按不打折反推</p>
+        </article>
+
+        <article class="result-card">
+          <p class="result-label muted">带利润最终成交价</p>
+          <p id="profitDealPrice" class="result-value">¥0.00</p>
+          <p id="profitHint" class="result-hint muted">已包含目标利润 ¥0.00</p>
+        </article>
+
+        <article class="result-card">
+          <p class="result-label muted">不亏本最终成交价</p>
+          <p id="breakEvenDealPrice" class="result-value">¥0.00</p>
+          <p class="result-hint muted">折扣后的真实成交金额</p>
+        </article>
+      </div>
+
+      <div class="details-grid">
+        <article class="panel detail-panel">
+          <h2>退货摊销</h2>
+          <div class="line-list">
+            <div class="line-row">
+              <span>每单运费损耗</span>
+              <strong id="fixedOrderLoss">¥0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>每个成功订单需摊退货单</span>
+              <strong id="returnOrdersPerKeptOrder">0.00 单</strong>
+            </div>
+            <div class="line-row">
+              <span>摊到每个成功订单的退货损耗</span>
+              <strong id="returnLossShare">¥0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>基础成本</span>
+              <strong id="baseCost">¥0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>每单推广成本</span>
+              <strong id="promotionCost">¥0.00</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel detail-panel">
+          <h2>计算公式</h2>
+          <div class="formula-list">
+            <div>
+              <p class="formula-title">不亏本最终成交价</p>
+              <p id="breakEvenFormula" class="formula-text">-</p>
+            </div>
+            <div>
+              <p class="formula-title">带利润最终成交价</p>
+              <p id="profitFormula" class="formula-text">-</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="pddPanel" class="results-section platform-panel active">
+      <div class="result-grid">
+        <article class="result-card result-card-even">
+          <p class="result-label">不推广不亏本拼单价</p>
+          <p id="noPromotionBreakEvenListingPrice" class="result-value">¥0.00</p>
+          <p id="noPromotionBreakEvenDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+
+        <article class="result-card result-card-profit">
+          <p class="result-label">不推广带利润拼单价</p>
+          <p id="noPromotionProfitListingPrice" class="result-value">¥0.00</p>
+          <p id="noPromotionProfitDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+
+        <article class="result-card result-card-even promotion-only hidden">
+          <p class="result-label">推广不亏本拼单价</p>
+          <p id="promotionBreakEvenListingPrice" class="result-value">¥0.00</p>
+          <p id="promotionBreakEvenDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+
+        <article class="result-card result-card-profit promotion-only hidden">
+          <p class="result-label">推广带利润拼单价</p>
+          <p id="promotionProfitListingPrice" class="result-value">¥0.00</p>
+          <p id="promotionProfitDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+      </div>
+
+      <div class="details-grid">
+        <article class="panel detail-panel">
+          <h2>价格说明</h2>
+          <div class="line-list">
+            <div class="line-row">
+              <span>成交折扣</span>
+              <strong id="revisedDiscountRate">100.00%</strong>
+            </div>
+            <div class="line-row">
+              <span>不推广最低成交价</span>
+              <strong id="noPromotionBreakEvenDealLine">¥0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>不推广保利润成交价</span>
+              <strong id="noPromotionProfitDealLine">¥0.00</strong>
+            </div>
+            <div class="line-row promotion-only hidden">
+              <span>推广最低成交价</span>
+              <strong id="promotionBreakEvenDealLine">¥0.00</strong>
+            </div>
+            <div class="line-row promotion-only hidden">
+              <span>推广保利润成交价</span>
+              <strong id="promotionProfitDealLine">¥0.00</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel detail-panel">
+          <h2>推广参考</h2>
+          <div class="line-list compact-list">
+            <div class="line-row">
+              <span>毛利率</span>
+              <strong id="grossMarginRate">0.00%</strong>
+            </div>
+            <div class="line-row">
+              <span>保本投产比</span>
+              <strong id="breakEvenRoi">0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>持平投产比</span>
+              <strong id="flatRoi">0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>最佳盈利投产比</span>
+              <strong id="bestProfitRoi">0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>保本成交出价</span>
+              <strong id="breakEvenBid">¥0.00</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel detail-panel">
+          <h2>定价公式</h2>
+          <div class="formula-list">
+            <div>
+              <p class="formula-title">不亏本价格</p>
+              <p id="breakEvenPricingFormula" class="formula-text">-</p>
+            </div>
+            <div>
+              <p class="formula-title">带利润价格</p>
+              <p id="profitPricingFormula" class="formula-text">-</p>
+            </div>
+            <div>
+              <p class="formula-title">推广参考</p>
+              <p id="promotionReferenceFormula" class="formula-text">-</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="douyinPanel" class="results-section platform-panel hidden">
+      <div class="result-grid">
+        <article class="result-card result-card-even">
+          <p class="result-label">不推广不亏本价格</p>
+          <p id="douyinBreakEvenPlatformPrice" class="result-value">¥0.00</p>
+          <p id="douyinBreakEvenDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+
+        <article class="result-card result-card-profit">
+          <p class="result-label">不推广带利润价格</p>
+          <p id="douyinProfitPlatformPrice" class="result-value">¥0.00</p>
+          <p id="douyinProfitDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+
+        <article class="result-card result-card-even promotion-only hidden">
+          <p class="result-label">推广不亏本价格</p>
+          <p id="douyinPromotionBreakEvenPlatformPrice" class="result-value">¥0.00</p>
+          <p id="douyinPromotionBreakEvenDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+
+        <article class="result-card result-card-profit promotion-only hidden">
+          <p class="result-label">推广带利润价格</p>
+          <p id="douyinPromotionProfitPlatformPrice" class="result-value">¥0.00</p>
+          <p id="douyinPromotionProfitDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+      </div>
+
+      <div class="details-grid">
+        <article class="panel detail-panel">
+          <h2>价格说明</h2>
+          <div class="line-list">
+            <div class="line-row">
+              <span>优惠券金额</span>
+              <strong id="douyinCouponLine">¥25.00</strong>
+            </div>
+            <div class="line-row">
+              <span>不推广最低成交价</span>
+              <strong id="douyinBreakEvenDealLine">¥0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>不推广保利润成交价</span>
+              <strong id="douyinProfitDealLine">¥0.00</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel detail-panel">
+          <h2>抖音公式</h2>
+          <div class="formula-list">
+            <div>
+              <p class="formula-title">不亏本价格</p>
+              <p id="douyinBreakEvenFormula" class="formula-text">-</p>
+            </div>
+            <div>
+              <p class="formula-title">带利润价格</p>
+              <p id="douyinProfitFormula" class="formula-text">-</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>
