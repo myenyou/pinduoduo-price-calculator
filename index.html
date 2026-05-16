@@ -3,35 +3,344 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>拼多多成交价与拼单价计算器</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="min-h-screen bg-[#f8fafc] text-slate-950 antialiased">
-  <main class="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-5 px-4 py-6 sm:px-6 lg:px-8">
-    <header class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <h1 class="text-2xl font-semibold tracking-normal">成交价与拼单价计算器</h1>
-      <p class="text-sm font-medium text-slate-500">BY 晴川女鞋优选</p>
-    </header>
+  <title>拼多多价格计算器</title>
+  <style>
+* {
+  box-sizing: border-box;
+}
 
-    <section class="rounded-lg border border-slate-200 bg-white">
-      <div class="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.html-page .app-shell {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-shell {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px 16px;
+}
+
+.panel h2,
+.panel-heading h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  gap: 12px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  padding: 16px;
+}
+
+.field-wrap {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.input-box {
+  position: relative;
+  display: block;
+}
+
+.input-box strong {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  color: #64748b;
+  font-weight: 400;
+  transform: translateY(-50%);
+}
+
+.input-box input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0 38px 0 12px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 400;
+  outline: none;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-box input:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.input-box input:disabled {
+  border-color: #e2e8f0;
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.switch {
+  position: relative;
+  display: inline-flex;
+  width: 58px;
+  height: 42px;
+  flex: 0 0 auto;
+  align-items: center;
+  cursor: pointer;
+}
+
+.switch input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.switch span {
+  position: relative;
+  width: 50px;
+  height: 28px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  pointer-events: none;
+  transition: background 0.15s ease;
+}
+
+.switch span::after {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+  content: "";
+  transition: transform 0.15s ease;
+}
+
+.switch input:checked + span {
+  background: #0f172a;
+}
+
+.switch input:checked + span::after {
+  transform: translateX(22px);
+}
+
+.promotion-notice {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  background: #fffbeb;
+  padding: 10px 12px;
+  color: #92400e;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.hidden {
+  display: none;
+}
+
+.results-section {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.result-grid,
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.result-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  padding: 16px;
+}
+
+.result-card-profit {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.result-card-even {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.result-label {
+  margin: 0;
+  color: #047857;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.result-card-even .result-label,
+.result-card-even .result-hint {
+  color: #1d4ed8;
+}
+
+.result-card-profit .result-value {
+  color: #064e3b;
+}
+
+.result-card-even .result-value {
+  color: #1e3a8a;
+}
+
+.muted {
+  color: #64748b;
+}
+
+.result-value {
+  margin: 10px 0 0;
+  color: #0f172a;
+  font-size: 34px;
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.1;
+}
+
+.result-hint {
+  margin: 10px 0 0;
+  color: #047857;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.detail-panel {
+  padding: 16px;
+}
+
+.line-list,
+.formula-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.line-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: #64748b;
+}
+
+.line-row strong {
+  color: #0f172a;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.formula-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.formula-text {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+  color: #64748b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.5;
+}
+
+@media (min-width: 560px) {
+  .app-shell {
+    gap: 18px;
+    padding: 20px;
+  }
+
+  .form-grid,
+  .result-grid,
+  .details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .promotion-notice {
+    align-self: end;
+  }
+}
+
+</style>
+</head>
+<body class="html-page">
+  <main class="app-shell">
+    <section class="panel">
+      <div class="panel-heading">
         <div>
-          <h2 class="font-semibold">成本条件</h2>
-          <p class="mt-1 text-sm text-slate-500">设置拿货价、成交折扣、运费、运费险、退货率、目标利润，按需启用推广。</p>
+          <h2>成本条件</h2>
         </div>
-        <div class="flex items-center gap-3">
-          <span class="text-sm font-medium text-slate-700">是否推广</span>
-          <label class="switch">
+        <div class="switch-row">
+          <span>是否推广</span>
+          <label class="switch" aria-label="是否推广">
             <input id="promotionSwitch" type="checkbox" />
             <span></span>
           </label>
         </div>
       </div>
 
-      <div class="grid gap-4 p-5 md:grid-cols-3">
+      <div class="form-grid">
         <label class="field-wrap">
           <span>拿货价</span>
-          <span class="input-box no-prefix">
+          <span class="input-box">
             <input id="purchaseCost" min="0" step="0.1" type="number" />
             <strong>元</strong>
           </span>
@@ -39,15 +348,15 @@
 
         <label class="field-wrap">
           <span>运费</span>
-          <span class="input-box no-prefix">
-            <input id="shippingFee" class="text-left" min="0" step="0.1" type="number" />
+          <span class="input-box">
+            <input id="shippingFee" min="0" step="0.1" type="number" />
             <strong>元</strong>
           </span>
         </label>
 
         <label class="field-wrap">
           <span>运费险</span>
-          <span class="input-box no-prefix">
+          <span class="input-box">
             <input id="freightInsurance" min="0" step="0.1" type="number" />
             <strong>元</strong>
           </span>
@@ -55,7 +364,7 @@
 
         <label class="field-wrap">
           <span>自定义成交折扣</span>
-          <span class="input-box no-prefix">
+          <span class="input-box">
             <input id="customDiscount" min="1" max="10" step="0.1" type="number" />
             <strong>折</strong>
           </span>
@@ -63,64 +372,63 @@
 
         <label class="field-wrap">
           <span>退货率</span>
-          <span class="input-box no-prefix">
-            <input id="returnRate" class="text-left" min="0" max="99" step="1" type="number" />
+          <span class="input-box">
+            <input id="returnRate" min="0" max="99" step="1" type="number" />
             <strong>%</strong>
           </span>
         </label>
 
         <label class="field-wrap">
           <span>目标利润</span>
-          <span class="input-box no-prefix">
+          <span class="input-box">
             <input id="targetProfit" min="0" step="0.1" type="number" />
             <strong>元</strong>
           </span>
         </label>
 
-        <div class="field-wrap">
+        <label class="field-wrap">
           <span>实际投产比</span>
-          <span class="input-box no-prefix">
+          <span class="input-box">
             <input id="promotionRoi" min="0" step="0.1" type="number" disabled />
             <strong>ROI</strong>
           </span>
-        </div>
+        </label>
 
-        <div id="promotionNotice" class="hidden h-11 items-center rounded-md border border-amber-200 bg-amber-50 px-4 text-sm leading-none text-amber-800 md:col-span-2 md:col-start-2 md:self-end"></div>
+        <div id="promotionNotice" class="promotion-notice hidden"></div>
       </div>
-
     </section>
 
-    <section class="min-w-0 space-y-4">
-      <div class="grid gap-4 sm:grid-cols-2">
-        <article class="result-card border-emerald-200 bg-emerald-50">
-          <p class="result-label text-emerald-700">带利润的拼单价</p>
-          <p id="profitListingPrice" class="result-value text-emerald-900">¥0.00</p>
-          <p id="profitListingHint" class="result-hint text-emerald-700">目标利润已计入</p>
+    <section class="results-section">
+      <div class="result-grid">
+        <article class="result-card result-card-profit">
+          <p class="result-label">带利润的拼单价</p>
+          <p id="profitListingPrice" class="result-value">¥0.00</p>
+          <p id="profitListingHint" class="result-hint">目标利润已计入</p>
         </article>
 
-        <article class="result-card border-blue-200 bg-blue-50">
-          <p class="result-label text-blue-700">不亏本拼单价</p>
-          <p id="breakEvenListingPrice" class="result-value text-blue-900">¥0.00</p>
-          <p id="breakEvenListingHint" class="result-hint text-blue-700">按 85% 折扣反推</p>
+        <article class="result-card result-card-even">
+          <p class="result-label">不亏本拼单价</p>
+          <p id="breakEvenListingPrice" class="result-value">¥0.00</p>
+          <p id="breakEvenListingHint" class="result-hint">按不打折反推</p>
         </article>
 
-        <article class="result-card border-slate-200 bg-white">
-          <p class="result-label text-slate-500">带利润最终成交价</p>
-          <p id="profitDealPrice" class="result-value text-slate-950">¥0.00</p>
-          <p id="profitHint" class="result-hint text-slate-500">已包含目标利润 ¥0.00</p>
+        <article class="result-card">
+          <p class="result-label muted">带利润最终成交价</p>
+          <p id="profitDealPrice" class="result-value">¥0.00</p>
+          <p id="profitHint" class="result-hint muted">已包含目标利润 ¥0.00</p>
         </article>
 
-        <article class="result-card border-slate-200 bg-white">
-          <p class="result-label text-slate-500">不亏本最终成交价</p>
-          <p id="breakEvenDealPrice" class="result-value text-slate-950">¥0.00</p>
-          <p class="result-hint text-slate-500">折扣后的真实成交金额</p>
+        <article class="result-card">
+          <p class="result-label muted">不亏本最终成交价</p>
+          <p id="breakEvenDealPrice" class="result-value">¥0.00</p>
+          <p class="result-hint muted">折扣后的真实成交金额</p>
         </article>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2">
-        <article class="rounded-lg border border-slate-200 bg-white p-5">
-          <h2 class="font-semibold">退货摊销</h2>
-          <div class="mt-4 space-y-3 text-sm">
+      <div class="details-grid">
+        <article class="panel detail-panel">
+          <h2>退货摊销</h2>
+          <div class="line-list">
             <div class="line-row">
               <span>每单运费损耗</span>
               <strong id="fixedOrderLoss">¥0.00</strong>
@@ -144,316 +452,167 @@
           </div>
         </article>
 
-        <article class="rounded-lg border border-slate-200 bg-white p-5">
-          <h2 class="font-semibold">计算公式</h2>
-          <div class="mt-4 space-y-4 text-sm">
+        <article class="panel detail-panel">
+          <h2>计算公式</h2>
+          <div class="formula-list">
             <div>
-              <p class="font-medium">不亏本最终成交价</p>
-              <p id="breakEvenFormula" class="mt-1 break-words font-mono leading-6 text-slate-500">-</p>
+              <p class="formula-title">不亏本最终成交价</p>
+              <p id="breakEvenFormula" class="formula-text">-</p>
             </div>
             <div>
-              <p class="font-medium">带利润最终成交价</p>
-              <p id="profitFormula" class="mt-1 break-words font-mono leading-6 text-slate-500">-</p>
+              <p class="formula-title">带利润最终成交价</p>
+              <p id="profitFormula" class="formula-text">-</p>
             </div>
           </div>
         </article>
       </div>
     </section>
-
   </main>
 
-  <style>
-    .field-wrap {
-      display: grid;
-      gap: 0.5rem;
-      font-size: 0.875rem;
-      font-weight: 500;
-    }
-
-    .input-box {
-      position: relative;
-      display: block;
-    }
-
-    .input-box span {
-      position: absolute;
-      left: 0.75rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #64748b;
-      font-weight: 400;
-    }
-
-    .input-box strong {
-      position: absolute;
-      right: 0.75rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #64748b;
-      font-weight: 400;
-    }
-
-    .input-box input {
-      height: 2.75rem;
-      width: 100%;
-      border-radius: 0.375rem;
-      border: 1px solid #cbd5e1;
-      background: #fff;
-      padding: 0 0.75rem 0 2rem;
-      font-size: 0.875rem;
-      font-weight: 400;
-      text-align: left;
-      outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .input-box.no-prefix input {
-      padding-left: 0.75rem;
-      padding-right: 2rem;
-    }
-
-    .input-box input:focus {
-      border-color: #0f172a;
-      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
-    }
-
-    .input-box input.text-left {
-      text-align: left;
-    }
-
-    .input-box input:disabled {
-      border-color: #e2e8f0;
-      background: #f1f5f9;
-      color: #94a3b8;
-      cursor: not-allowed;
-    }
-
-    .switch {
-      position: relative;
-      display: inline-flex;
-      height: 2.75rem;
-      width: 3.75rem;
-      flex: 0 0 auto;
-      cursor: pointer;
-      align-items: center;
-    }
-
-    .switch input {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .switch span {
-      position: relative;
-      height: 1.75rem;
-      width: 3.25rem;
-      border-radius: 999px;
-      background: #cbd5e1;
-      transition: background 0.15s ease;
-    }
-
-    .switch span::after {
-      content: "";
-      position: absolute;
-      left: 0.25rem;
-      top: 0.25rem;
-      height: 1.25rem;
-      width: 1.25rem;
-      border-radius: 999px;
-      background: #fff;
-      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
-      transition: transform 0.15s ease;
-    }
-
-    .switch input:checked + span {
-      background: #0f172a;
-    }
-
-    .switch input:checked + span::after {
-      transform: translateX(1.5rem);
-    }
-
-    .line-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      color: #64748b;
-    }
-
-    .line-row strong {
-      color: #0f172a;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .result-card {
-      border-width: 1px;
-      border-radius: 0.5rem;
-      padding: 1.25rem;
-    }
-
-    .result-label {
-      font-size: 0.875rem;
-      font-weight: 500;
-    }
-
-    .result-value {
-      margin-top: 0.75rem;
-      font-size: 2.25rem;
-      line-height: 1.1;
-      font-weight: 650;
-      letter-spacing: 0;
-    }
-
-    .result-hint {
-      margin-top: 0.75rem;
-      font-size: 0.875rem;
-      line-height: 1.5;
-    }
-  </style>
-
   <script>
-    const defaults = {
-      purchaseCost: 20,
-      shippingFee: 4,
-      freightInsurance: 0.5,
-      returnRate: 50,
-      targetProfit: 5,
-      customDiscount: 10,
-      promotionRoi: 0,
-    };
+const defaults = {
+  purchaseCost: 20,
+  shippingFee: 4,
+  freightInsurance: 0.5,
+  returnRate: 50,
+  targetProfit: 5,
+  customDiscount: 10,
+  promotionRoi: 0,
+};
 
-    const ids = Object.keys(defaults);
-    const money = new Intl.NumberFormat("zh-CN", {
-      style: "currency",
-      currency: "CNY",
-      minimumFractionDigits: 2,
-    });
+const ids = Object.keys(defaults);
+const money = new Intl.NumberFormat("zh-CN", {
+  style: "currency",
+  currency: "CNY",
+  minimumFractionDigits: 2,
+});
 
-    function numberValue(id) {
-      const value = Number(document.getElementById(id).value);
-      return Number.isFinite(value) ? value : 0;
-    }
+function numberValue(id) {
+  const value = Number(document.getElementById(id).value);
+  return Number.isFinite(value) ? value : 0;
+}
 
-    function clamp(value, min, max) {
-      return Math.min(Math.max(value, min), max);
-    }
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
 
-    function roundUpCent(value) {
-      return Math.ceil(value * 100) / 100;
-    }
+function roundUpCent(value) {
+  return Math.ceil(value * 100) / 100;
+}
 
-    function getDiscountForCalculation() {
-      const input = document.getElementById("customDiscount");
-      const value = Number(input.value);
-      if (!Number.isFinite(value) || input.value === "") {
-        return 1;
-      }
+function getDiscountForCalculation() {
+  const input = document.getElementById("customDiscount");
+  const value = Number(input.value);
+  if (!Number.isFinite(value) || input.value === "") {
+    return 1;
+  }
 
-      return clamp(value, 1, 10);
-    }
+  return clamp(value, 1, 10);
+}
 
-    function normalizeDiscountInput() {
-      const input = document.getElementById("customDiscount");
-      const value = Number(input.value);
-      const normalized = Number.isFinite(value) && input.value !== "" ? clamp(value, 1, 10) : 1;
-      if (normalized !== value) {
-        input.value = String(normalized);
-      }
-      return normalized;
-    }
+function normalizeDiscountInput() {
+  const input = document.getElementById("customDiscount");
+  const value = Number(input.value);
+  const normalized = Number.isFinite(value) && input.value !== "" ? clamp(value, 1, 10) : 1;
+  if (normalized !== value) {
+    input.value = String(normalized);
+  }
+  return normalized;
+}
 
-    function discountLabel(discount) {
-      return discount === 10 ? "不打折" : ` ${discount} 折`;
-    }
+function discountLabel(discount) {
+  return discount === 10 ? "不打折" : `${discount} 折`;
+}
 
-    function calculate() {
-      const purchaseCost = numberValue("purchaseCost");
-      const shippingFee = numberValue("shippingFee");
-      const freightInsurance = numberValue("freightInsurance");
-      const targetProfit = numberValue("targetProfit");
-      const returnRatePercent = numberValue("returnRate");
-      const customDiscount = getDiscountForCalculation();
-      const promotionEnabled = document.getElementById("promotionSwitch").checked;
-      const promotionRoi = promotionEnabled ? Math.max(numberValue("promotionRoi"), 1.01) : 0;
+function calculate() {
+  const purchaseCost = numberValue("purchaseCost");
+  const shippingFee = numberValue("shippingFee");
+  const freightInsurance = numberValue("freightInsurance");
+  const targetProfit = numberValue("targetProfit");
+  const returnRatePercent = numberValue("returnRate");
+  const customDiscount = getDiscountForCalculation();
+  const promotionEnabled = document.getElementById("promotionSwitch").checked;
+  const promotionRoi = promotionEnabled ? Math.max(numberValue("promotionRoi"), 1.01) : 0;
 
-      const returnRate = clamp(returnRatePercent / 100, 0, 0.99);
-      const fixedOrderLoss = shippingFee + freightInsurance;
-      const returnOrdersPerKeptOrder = returnRate / (1 - returnRate);
-      const returnLossShare = returnOrdersPerKeptOrder * fixedOrderLoss;
-      const baseCost = purchaseCost + fixedOrderLoss + returnLossShare;
+  const returnRate = clamp(returnRatePercent / 100, 0, 0.99);
+  const fixedOrderLoss = shippingFee + freightInsurance;
+  const returnOrdersPerKeptOrder = returnRate / (1 - returnRate);
+  const returnLossShare = returnOrdersPerKeptOrder * fixedOrderLoss;
+  const baseCost = purchaseCost + fixedOrderLoss + returnLossShare;
 
-      const promotionDivisor = promotionEnabled ? 1 - 1 / promotionRoi : 1;
-      const breakEvenDealPrice = baseCost / promotionDivisor;
-      const profitDealPrice = (baseCost + targetProfit) / promotionDivisor;
-      const promotionCost = promotionEnabled ? breakEvenDealPrice / promotionRoi : 0;
-      const discountRate = customDiscount / 10;
-      const breakEvenListingPrice = roundUpCent(breakEvenDealPrice / discountRate);
-      const profitListingPrice = roundUpCent(profitDealPrice / discountRate);
+  const promotionDivisor = promotionEnabled ? 1 - 1 / promotionRoi : 1;
+  const breakEvenDealPrice = baseCost / promotionDivisor;
+  const profitDealPrice = (baseCost + targetProfit) / promotionDivisor;
+  const promotionCost = promotionEnabled ? breakEvenDealPrice / promotionRoi : 0;
+  const discountRate = customDiscount / 10;
+  const breakEvenListingPrice = roundUpCent(breakEvenDealPrice / discountRate);
+  const profitListingPrice = roundUpCent(profitDealPrice / discountRate);
 
-      document.getElementById("breakEvenListingPrice").textContent = money.format(breakEvenListingPrice);
-      document.getElementById("profitListingPrice").textContent = money.format(profitListingPrice);
-      document.getElementById("breakEvenListingHint").textContent = `按${discountLabel(customDiscount)}反推`;
-      document.getElementById("profitListingHint").textContent = `按${discountLabel(customDiscount)}反推，利润 ${money.format(targetProfit)}`;
-      document.getElementById("breakEvenDealPrice").textContent = money.format(breakEvenDealPrice);
-      document.getElementById("profitDealPrice").textContent = money.format(profitDealPrice);
-      document.getElementById("profitHint").textContent = `已包含目标利润 ${money.format(targetProfit)}。`;
-      document.getElementById("fixedOrderLoss").textContent = money.format(fixedOrderLoss);
-      document.getElementById("returnOrdersPerKeptOrder").textContent = `${returnOrdersPerKeptOrder.toFixed(2)} 单`;
-      document.getElementById("returnLossShare").textContent = money.format(returnLossShare);
-      document.getElementById("baseCost").textContent = money.format(baseCost);
-      document.getElementById("promotionCost").textContent = money.format(promotionCost);
-      const promotionNotice = document.getElementById("promotionNotice");
-      promotionNotice.classList.toggle("hidden", !promotionEnabled);
-      promotionNotice.classList.toggle("flex", promotionEnabled);
-      promotionNotice.textContent = promotionEnabled
-        ? `已计入推广成本：当前 ROI ${promotionRoi.toFixed(2)}，每单推广成本约 ${money.format(promotionCost)}。`
-        : "";
-      document.getElementById("breakEvenFormula").textContent =
-        promotionEnabled
-          ? `(${purchaseCost.toFixed(2)} 拿货 + ${fixedOrderLoss.toFixed(2)} 运费险 + ${returnLossShare.toFixed(2)} 退货摊销) ÷ (1 - 1 / ${promotionRoi.toFixed(2)}) = ${money.format(breakEvenDealPrice)}`
-          : `${purchaseCost.toFixed(2)} 拿货 + ${fixedOrderLoss.toFixed(2)} 运费险 + ${returnLossShare.toFixed(2)} 退货摊销 = ${money.format(breakEvenDealPrice)}`;
-      document.getElementById("profitFormula").textContent =
-        promotionEnabled
-          ? `(${baseCost.toFixed(2)} 基础成本 + ${targetProfit.toFixed(2)} 利润) ÷ (1 - 1 / ${promotionRoi.toFixed(2)}) = ${money.format(profitDealPrice)}`
-          : `${breakEvenDealPrice.toFixed(2)} 不亏本成交价 + ${targetProfit.toFixed(2)} 利润 = ${money.format(profitDealPrice)}`;
-    }
+  document.getElementById("breakEvenListingPrice").textContent = money.format(breakEvenListingPrice);
+  document.getElementById("profitListingPrice").textContent = money.format(profitListingPrice);
+  document.getElementById("breakEvenListingHint").textContent = `按${discountLabel(customDiscount)}反推`;
+  document.getElementById("profitListingHint").textContent = `按${discountLabel(customDiscount)}反推，利润 ${money.format(targetProfit)}`;
+  document.getElementById("breakEvenDealPrice").textContent = money.format(breakEvenDealPrice);
+  document.getElementById("profitDealPrice").textContent = money.format(profitDealPrice);
+  document.getElementById("profitHint").textContent = `已包含目标利润 ${money.format(targetProfit)}。`;
+  document.getElementById("fixedOrderLoss").textContent = money.format(fixedOrderLoss);
+  document.getElementById("returnOrdersPerKeptOrder").textContent = `${returnOrdersPerKeptOrder.toFixed(2)} 单`;
+  document.getElementById("returnLossShare").textContent = money.format(returnLossShare);
+  document.getElementById("baseCost").textContent = money.format(baseCost);
+  document.getElementById("promotionCost").textContent = money.format(promotionCost);
 
-    function syncPromotionSwitch() {
-      const enabled = document.getElementById("promotionSwitch").checked;
-      const roiInput = document.getElementById("promotionRoi");
-      roiInput.disabled = !enabled;
-      if (!enabled) {
-        roiInput.value = "0";
-      } else if (Number(roiInput.value) <= 0) {
-        roiInput.value = "5";
-      }
-    }
+  const promotionNotice = document.getElementById("promotionNotice");
+  promotionNotice.classList.toggle("hidden", !promotionEnabled);
+  promotionNotice.textContent = promotionEnabled
+    ? `已计入推广成本：当前 ROI ${promotionRoi.toFixed(2)}，每单推广成本约 ${money.format(promotionCost)}。`
+    : "";
 
-    function setDefaultValues() {
-      ids.forEach((id) => {
-        document.getElementById(id).value = defaults[id];
-      });
-      document.getElementById("promotionSwitch").checked = false;
-      syncPromotionSwitch();
-      calculate();
-    }
+  document.getElementById("breakEvenFormula").textContent =
+    promotionEnabled
+      ? `(${purchaseCost.toFixed(2)} 拿货 + ${fixedOrderLoss.toFixed(2)} 运费险 + ${returnLossShare.toFixed(2)} 退货摊销) ÷ (1 - 1 / ${promotionRoi.toFixed(2)}) = ${money.format(breakEvenDealPrice)}`
+      : `${purchaseCost.toFixed(2)} 拿货 + ${fixedOrderLoss.toFixed(2)} 运费险 + ${returnLossShare.toFixed(2)} 退货摊销 = ${money.format(breakEvenDealPrice)}`;
+  document.getElementById("profitFormula").textContent =
+    promotionEnabled
+      ? `(${baseCost.toFixed(2)} 基础成本 + ${targetProfit.toFixed(2)} 利润) ÷ (1 - 1 / ${promotionRoi.toFixed(2)}) = ${money.format(profitDealPrice)}`
+      : `${breakEvenDealPrice.toFixed(2)} 不亏本成交价 + ${targetProfit.toFixed(2)} 利润 = ${money.format(profitDealPrice)}`;
+}
 
-    ids.forEach((id) => {
-      document.getElementById(id).addEventListener("input", calculate);
-    });
-    document.getElementById("customDiscount").addEventListener("blur", () => {
-      normalizeDiscountInput();
-      calculate();
-    });
-    document.getElementById("promotionSwitch").addEventListener("change", () => {
-      syncPromotionSwitch();
-      calculate();
-    });
+function syncPromotionSwitch() {
+  const enabled = document.getElementById("promotionSwitch").checked;
+  const roiInput = document.getElementById("promotionRoi");
+  roiInput.disabled = !enabled;
+  if (!enabled) {
+    roiInput.value = "0";
+  } else if (Number(roiInput.value) <= 0) {
+    roiInput.value = "5";
+  }
+}
 
-    setDefaultValues();
-  </script>
+function setDefaultValues() {
+  ids.forEach((id) => {
+    document.getElementById(id).value = defaults[id];
+  });
+  document.getElementById("promotionSwitch").checked = false;
+  syncPromotionSwitch();
+  calculate();
+}
+
+ids.forEach((id) => {
+  document.getElementById(id).addEventListener("input", calculate);
+});
+
+document.getElementById("customDiscount").addEventListener("blur", () => {
+  normalizeDiscountInput();
+  calculate();
+});
+
+document.getElementById("promotionSwitch").addEventListener("change", () => {
+  syncPromotionSwitch();
+  calculate();
+});
+
+setDefaultValues();
+
+</script>
 </body>
 </html>
