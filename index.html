@@ -663,6 +663,18 @@ input {
           <p id="douyinProfitPlatformPrice" class="result-value">¥0.00</p>
           <p id="douyinProfitDealPrice" class="result-hint">最终成交价 ¥0.00</p>
         </article>
+
+        <article class="result-card result-card-even promotion-only hidden">
+          <p class="result-label">推广不亏本价格</p>
+          <p id="douyinPromotionBreakEvenPlatformPrice" class="result-value">¥0.00</p>
+          <p id="douyinPromotionBreakEvenDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+
+        <article class="result-card result-card-profit promotion-only hidden">
+          <p class="result-label">推广带利润价格</p>
+          <p id="douyinPromotionProfitPlatformPrice" class="result-value">¥0.00</p>
+          <p id="douyinPromotionProfitDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
       </div>
 
       <div class="details-grid">
@@ -978,15 +990,26 @@ function calculateDouyinLogic({ targetProfit, returnRate }) {
   const fixedOrderLoss = shippingFee + freightInsurance;
   const returnLossShare = safeRatio(returnRate, signedRate) * fixedOrderLoss;
   const baseCost = purchaseCost + fixedOrderLoss + returnLossShare;
+  const promotionEnabled = document.getElementById("promotionSwitch").checked;
+  const promotionRoi = promotionEnabled ? Math.max(numberValue("promotionRoi"), 1.01) : 0;
+  const promotionDivisor = promotionEnabled ? 1 - 1 / promotionRoi : 1;
   const breakEvenDealPrice = baseCost;
   const profitDealPrice = baseCost + targetProfit;
+  const promotionBreakEvenDealPrice = baseCost / promotionDivisor;
+  const promotionProfitDealPrice = (baseCost + targetProfit) / promotionDivisor;
   const breakEvenPlatformPrice = roundUpCent(breakEvenDealPrice + couponAmount);
   const profitPlatformPrice = roundUpCent(profitDealPrice + couponAmount);
+  const promotionBreakEvenPlatformPrice = roundUpCent(promotionBreakEvenDealPrice + couponAmount);
+  const promotionProfitPlatformPrice = roundUpCent(promotionProfitDealPrice + couponAmount);
 
   document.getElementById("douyinBreakEvenPlatformPrice").textContent = money.format(breakEvenPlatformPrice);
   document.getElementById("douyinBreakEvenDealPrice").textContent = `最终成交价 ${money.format(breakEvenDealPrice)}`;
   document.getElementById("douyinProfitPlatformPrice").textContent = money.format(profitPlatformPrice);
   document.getElementById("douyinProfitDealPrice").textContent = `最终成交价 ${money.format(profitDealPrice)}`;
+  document.getElementById("douyinPromotionBreakEvenPlatformPrice").textContent = money.format(promotionBreakEvenPlatformPrice);
+  document.getElementById("douyinPromotionBreakEvenDealPrice").textContent = `最终成交价 ${money.format(promotionBreakEvenDealPrice)}`;
+  document.getElementById("douyinPromotionProfitPlatformPrice").textContent = money.format(promotionProfitPlatformPrice);
+  document.getElementById("douyinPromotionProfitDealPrice").textContent = `最终成交价 ${money.format(promotionProfitDealPrice)}`;
   document.getElementById("douyinCouponLine").textContent = money.format(couponAmount);
   document.getElementById("douyinBreakEvenDealLine").textContent = money.format(breakEvenDealPrice);
   document.getElementById("douyinProfitDealLine").textContent = money.format(profitDealPrice);
