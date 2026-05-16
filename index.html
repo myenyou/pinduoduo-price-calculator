@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>拼多多价格计算器</title>
+  <title>价格计算器</title>
   <style>
 * {
   box-sizing: border-box;
@@ -36,6 +36,33 @@ input {
   flex-direction: column;
   gap: 16px;
   padding: 16px;
+}
+
+.logic-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #e2e8f0;
+  padding: 4px;
+}
+
+.logic-tab {
+  min-height: 36px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.logic-tab.active {
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .panel {
@@ -83,6 +110,41 @@ input {
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
+}
+
+.field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mini-tabs {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 128px;
+  gap: 2px;
+  border-radius: 6px;
+  background: #e2e8f0;
+  padding: 2px;
+}
+
+.mini-tab {
+  min-height: 24px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.mini-tab.active {
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .input-box {
@@ -190,6 +252,15 @@ input {
 }
 
 .hidden {
+  display: none;
+}
+
+.logic-panel.hidden {
+  display: none;
+}
+
+.platform-panel.hidden,
+.promotion-only.hidden {
   display: none;
 }
 
@@ -323,6 +394,11 @@ input {
 </head>
 <body class="html-page">
   <main class="app-shell">
+    <nav class="logic-tabs" aria-label="平台">
+      <button id="pddPlatformTab" class="logic-tab active" type="button" data-platform="pdd">拼多多</button>
+      <button id="douyinPlatformTab" class="logic-tab" type="button" data-platform="douyin">抖音</button>
+    </nav>
+
     <section class="panel">
       <div class="panel-heading">
         <div>
@@ -347,10 +423,16 @@ input {
         </label>
 
         <label class="field-wrap">
-          <span>目标利润</span>
+          <span class="field-header">
+            <span>目标利润</span>
+            <span class="mini-tabs" aria-label="目标利润类型">
+              <button id="fixedProfitMode" class="mini-tab active" type="button" data-profit-mode="fixed">固定利润</button>
+              <button id="percentProfitMode" class="mini-tab" type="button" data-profit-mode="percent">百分比利润</button>
+            </span>
+          </span>
           <span class="input-box">
             <input id="targetProfit" min="0" step="0.1" type="number" />
-            <strong>元</strong>
+            <strong id="targetProfitUnit">元</strong>
           </span>
         </label>
 
@@ -379,10 +461,10 @@ input {
         </label>
 
         <label class="field-wrap">
-          <span>自定义成交折扣</span>
+          <span id="pricingAdjustmentLabel">自定义成交折扣</span>
           <span class="input-box">
             <input id="customDiscount" min="1" max="10" step="0.1" type="number" />
-            <strong>折</strong>
+            <strong id="pricingAdjustmentUnit">折</strong>
           </span>
         </label>
 
@@ -398,7 +480,7 @@ input {
       </div>
     </section>
 
-    <section class="results-section">
+    <section id="currentLogicPanel" class="results-section logic-panel hidden">
       <div class="result-grid">
         <article class="result-card result-card-profit">
           <p class="result-label">带利润的拼单价</p>
@@ -467,6 +549,156 @@ input {
         </article>
       </div>
     </section>
+
+    <section id="pddPanel" class="results-section platform-panel active">
+      <div class="result-grid">
+        <article class="result-card result-card-even">
+          <p class="result-label">不推广不亏本拼单价</p>
+          <p id="noPromotionBreakEvenListingPrice" class="result-value">¥0.00</p>
+          <p id="noPromotionBreakEvenDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+
+        <article class="result-card result-card-profit">
+          <p class="result-label">不推广带利润拼单价</p>
+          <p id="noPromotionProfitListingPrice" class="result-value">¥0.00</p>
+          <p id="noPromotionProfitDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+
+        <article class="result-card result-card-even promotion-only hidden">
+          <p class="result-label">推广不亏本拼单价</p>
+          <p id="promotionBreakEvenListingPrice" class="result-value">¥0.00</p>
+          <p id="promotionBreakEvenDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+
+        <article class="result-card result-card-profit promotion-only hidden">
+          <p class="result-label">推广带利润拼单价</p>
+          <p id="promotionProfitListingPrice" class="result-value">¥0.00</p>
+          <p id="promotionProfitDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+      </div>
+
+      <div class="details-grid">
+        <article class="panel detail-panel">
+          <h2>价格说明</h2>
+          <div class="line-list">
+            <div class="line-row">
+              <span>成交折扣</span>
+              <strong id="revisedDiscountRate">100.00%</strong>
+            </div>
+            <div class="line-row">
+              <span>不推广最低成交价</span>
+              <strong id="noPromotionBreakEvenDealLine">¥0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>不推广保利润成交价</span>
+              <strong id="noPromotionProfitDealLine">¥0.00</strong>
+            </div>
+            <div class="line-row promotion-only hidden">
+              <span>推广最低成交价</span>
+              <strong id="promotionBreakEvenDealLine">¥0.00</strong>
+            </div>
+            <div class="line-row promotion-only hidden">
+              <span>推广保利润成交价</span>
+              <strong id="promotionProfitDealLine">¥0.00</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel detail-panel">
+          <h2>推广参考</h2>
+          <div class="line-list compact-list">
+            <div class="line-row">
+              <span>毛利率</span>
+              <strong id="grossMarginRate">0.00%</strong>
+            </div>
+            <div class="line-row">
+              <span>保本投产比</span>
+              <strong id="breakEvenRoi">0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>持平投产比</span>
+              <strong id="flatRoi">0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>最佳盈利投产比</span>
+              <strong id="bestProfitRoi">0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>保本成交出价</span>
+              <strong id="breakEvenBid">¥0.00</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel detail-panel">
+          <h2>定价公式</h2>
+          <div class="formula-list">
+            <div>
+              <p class="formula-title">不亏本价格</p>
+              <p id="breakEvenPricingFormula" class="formula-text">-</p>
+            </div>
+            <div>
+              <p class="formula-title">带利润价格</p>
+              <p id="profitPricingFormula" class="formula-text">-</p>
+            </div>
+            <div>
+              <p class="formula-title">推广参考</p>
+              <p id="promotionReferenceFormula" class="formula-text">-</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="douyinPanel" class="results-section platform-panel hidden">
+      <div class="result-grid">
+        <article class="result-card result-card-even">
+          <p class="result-label">不推广不亏本价格</p>
+          <p id="douyinBreakEvenPlatformPrice" class="result-value">¥0.00</p>
+          <p id="douyinBreakEvenDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+
+        <article class="result-card result-card-profit">
+          <p class="result-label">不推广带利润价格</p>
+          <p id="douyinProfitPlatformPrice" class="result-value">¥0.00</p>
+          <p id="douyinProfitDealPrice" class="result-hint">最终成交价 ¥0.00</p>
+        </article>
+      </div>
+
+      <div class="details-grid">
+        <article class="panel detail-panel">
+          <h2>价格说明</h2>
+          <div class="line-list">
+            <div class="line-row">
+              <span>优惠券金额</span>
+              <strong id="douyinCouponLine">¥25.00</strong>
+            </div>
+            <div class="line-row">
+              <span>不推广最低成交价</span>
+              <strong id="douyinBreakEvenDealLine">¥0.00</strong>
+            </div>
+            <div class="line-row">
+              <span>不推广保利润成交价</span>
+              <strong id="douyinProfitDealLine">¥0.00</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel detail-panel">
+          <h2>抖音公式</h2>
+          <div class="formula-list">
+            <div>
+              <p class="formula-title">不亏本价格</p>
+              <p id="douyinBreakEvenFormula" class="formula-text">-</p>
+            </div>
+            <div>
+              <p class="formula-title">带利润价格</p>
+              <p id="douyinProfitFormula" class="formula-text">-</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
   </main>
 
   <script>
@@ -481,10 +713,17 @@ const defaults = {
 };
 
 const ids = Object.keys(defaults);
+let pddDiscountValue = defaults.customDiscount;
+let douyinCouponValue = 25;
 const money = new Intl.NumberFormat("zh-CN", {
   style: "currency",
   currency: "CNY",
   minimumFractionDigits: 2,
+});
+const percent = new Intl.NumberFormat("zh-CN", {
+  style: "percent",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 function numberValue(id) {
@@ -500,6 +739,14 @@ function roundUpCent(value) {
   return Math.ceil(value * 100) / 100;
 }
 
+function safeRatio(numerator, denominator) {
+  return denominator > 0 ? numerator / denominator : 0;
+}
+
+function formatRatio(value) {
+  return Number.isFinite(value) ? value.toFixed(2) : "0.00";
+}
+
 function getDiscountForCalculation() {
   const input = document.getElementById("customDiscount");
   const value = Number(input.value);
@@ -510,7 +757,59 @@ function getDiscountForCalculation() {
   return clamp(value, 1, 10);
 }
 
+function currentPlatform() {
+  const active = document.querySelector(".logic-tab.active");
+  return active?.dataset.platform === "douyin" ? "douyin" : "pdd";
+}
+
+function currentCouponAmount() {
+  return currentPlatform() === "douyin" ? Math.max(numberValue("customDiscount"), 0) : douyinCouponValue;
+}
+
+function activePddDiscount() {
+  return currentPlatform() === "pdd" ? getDiscountForCalculation() : clamp(Number(pddDiscountValue), 1, 10);
+}
+
+function savePlatformInputValue() {
+  if (currentPlatform() === "douyin") {
+    douyinCouponValue = Math.max(numberValue("customDiscount"), 0);
+  } else {
+    pddDiscountValue = getDiscountForCalculation();
+  }
+}
+
+function syncPlatformField() {
+  const platform = currentPlatform();
+  const input = document.getElementById("customDiscount");
+  const label = document.getElementById("pricingAdjustmentLabel");
+  const unit = document.getElementById("pricingAdjustmentUnit");
+
+  if (platform === "douyin") {
+    label.textContent = "优惠券金额";
+    unit.textContent = "元";
+    input.min = "0";
+    input.removeAttribute("max");
+    input.step = "0.1";
+    input.value = String(douyinCouponValue);
+  } else {
+    label.textContent = "自定义成交折扣";
+    unit.textContent = "折";
+    input.min = "1";
+    input.max = "10";
+    input.step = "0.1";
+    input.value = String(pddDiscountValue);
+  }
+}
+
 function normalizeDiscountInput() {
+  if (currentPlatform() === "douyin") {
+    const input = document.getElementById("customDiscount");
+    const value = Math.max(numberValue("customDiscount"), 0);
+    input.value = String(value);
+    douyinCouponValue = value;
+    return value;
+  }
+
   const input = document.getElementById("customDiscount");
   const value = Number(input.value);
   const normalized = Number.isFinite(value) && input.value !== "" ? clamp(value, 1, 10) : 1;
@@ -524,13 +823,38 @@ function discountLabel(discount) {
   return discount === 10 ? "不打折" : `${discount} 折`;
 }
 
+function currentProfitMode() {
+  const active = document.querySelector(".mini-tab.active");
+  return active?.dataset.profitMode === "percent" ? "percent" : "fixed";
+}
+
+function targetProfitValue(purchaseCost) {
+  const rawValue = numberValue("targetProfit");
+  return currentProfitMode() === "percent" ? purchaseCost * rawValue / 100 : rawValue;
+}
+
+function syncTargetProfitMode() {
+  const mode = currentProfitMode();
+  const unit = document.getElementById("targetProfitUnit");
+  const input = document.getElementById("targetProfit");
+
+  unit.textContent = mode === "percent" ? "%" : "元";
+  input.step = mode === "percent" ? "1" : "0.1";
+}
+
 function calculate() {
   const purchaseCost = numberValue("purchaseCost");
   const shippingFee = numberValue("shippingFee");
   const freightInsurance = numberValue("freightInsurance");
-  const targetProfit = numberValue("targetProfit");
+  const targetProfit = targetProfitValue(purchaseCost);
   const returnRatePercent = numberValue("returnRate");
-  const customDiscount = getDiscountForCalculation();
+  if (currentPlatform() === "douyin") {
+    douyinCouponValue = currentCouponAmount();
+  } else {
+    pddDiscountValue = getDiscountForCalculation();
+  }
+
+  const customDiscount = activePddDiscount();
   const promotionEnabled = document.getElementById("promotionSwitch").checked;
   const promotionRoi = promotionEnabled ? Math.max(numberValue("promotionRoi"), 1.01) : 0;
 
@@ -548,6 +872,7 @@ function calculate() {
   const breakEvenListingPrice = roundUpCent(breakEvenDealPrice / discountRate);
   const profitListingPrice = roundUpCent(profitDealPrice / discountRate);
 
+  syncTargetProfitMode();
   document.getElementById("breakEvenListingPrice").textContent = money.format(breakEvenListingPrice);
   document.getElementById("profitListingPrice").textContent = money.format(profitListingPrice);
   document.getElementById("breakEvenListingHint").textContent = `按${discountLabel(customDiscount)}反推`;
@@ -575,6 +900,100 @@ function calculate() {
     promotionEnabled
       ? `(${baseCost.toFixed(2)} 基础成本 + ${targetProfit.toFixed(2)} 利润) ÷ (1 - 1 / ${promotionRoi.toFixed(2)}) = ${money.format(profitDealPrice)}`
       : `${breakEvenDealPrice.toFixed(2)} 不亏本成交价 + ${targetProfit.toFixed(2)} 利润 = ${money.format(profitDealPrice)}`;
+
+  calculateRevisedLogic({
+    profitDealPrice,
+    targetProfit,
+    returnRate,
+    customDiscount,
+  });
+  calculateDouyinLogic({ targetProfit, returnRate });
+}
+
+function calculateRevisedLogic({ profitDealPrice, targetProfit, returnRate, customDiscount }) {
+  const signedRate = 1 - returnRate;
+  const discountRate = customDiscount / 10;
+  const purchaseCost = numberValue("purchaseCost");
+  const shippingFee = numberValue("shippingFee");
+  const freightInsurance = numberValue("freightInsurance");
+  const promotionEnabled = document.getElementById("promotionSwitch").checked;
+  const promotionRoi = promotionEnabled ? Math.max(numberValue("promotionRoi"), 1.01) : 0;
+  const fixedOrderLoss = shippingFee + freightInsurance;
+  const returnLossShare = safeRatio(returnRate, signedRate) * fixedOrderLoss;
+  const baseCost = purchaseCost + fixedOrderLoss + returnLossShare;
+  const promotionDivisor = promotionEnabled ? 1 - 1 / promotionRoi : 1;
+
+  const noPromotionBreakEvenDealPrice = baseCost;
+  const noPromotionProfitDealPrice = baseCost + targetProfit;
+  const promotionBreakEvenDealPrice = baseCost / promotionDivisor;
+  const promotionProfitDealPrice = (baseCost + targetProfit) / promotionDivisor;
+  const noPromotionBreakEvenListingPrice = roundUpCent(safeRatio(noPromotionBreakEvenDealPrice, discountRate));
+  const noPromotionProfitListingPrice = roundUpCent(safeRatio(noPromotionProfitDealPrice, discountRate));
+  const promotionBreakEvenListingPrice = roundUpCent(safeRatio(promotionBreakEvenDealPrice, discountRate));
+  const promotionProfitListingPrice = roundUpCent(safeRatio(promotionProfitDealPrice, discountRate));
+
+  const grossMarginRate = safeRatio(targetProfit, profitDealPrice);
+  const breakEvenRoi = safeRatio(profitDealPrice, targetProfit);
+  const flatRoi = safeRatio(breakEvenRoi, signedRate);
+  const profitMultiplier = grossMarginRate < 0.3 ? 1.4 : 2;
+  const bestProfitRoi = flatRoi * profitMultiplier;
+  const breakEvenBid = targetProfit * signedRate;
+
+  document.getElementById("noPromotionBreakEvenListingPrice").textContent = money.format(noPromotionBreakEvenListingPrice);
+  document.getElementById("noPromotionBreakEvenDealPrice").textContent = `最终成交价 ${money.format(noPromotionBreakEvenDealPrice)}`;
+  document.getElementById("noPromotionProfitListingPrice").textContent = money.format(noPromotionProfitListingPrice);
+  document.getElementById("noPromotionProfitDealPrice").textContent = `最终成交价 ${money.format(noPromotionProfitDealPrice)}`;
+  document.getElementById("promotionBreakEvenListingPrice").textContent = money.format(promotionBreakEvenListingPrice);
+  document.getElementById("promotionBreakEvenDealPrice").textContent = `最终成交价 ${money.format(promotionBreakEvenDealPrice)}`;
+  document.getElementById("promotionProfitListingPrice").textContent = money.format(promotionProfitListingPrice);
+  document.getElementById("promotionProfitDealPrice").textContent = `最终成交价 ${money.format(promotionProfitDealPrice)}`;
+  document.querySelectorAll(".promotion-only").forEach((element) => {
+    element.classList.toggle("hidden", !promotionEnabled);
+  });
+  document.getElementById("revisedDiscountRate").textContent = percent.format(discountRate);
+  document.getElementById("noPromotionBreakEvenDealLine").textContent = money.format(noPromotionBreakEvenDealPrice);
+  document.getElementById("noPromotionProfitDealLine").textContent = money.format(noPromotionProfitDealPrice);
+  document.getElementById("promotionBreakEvenDealLine").textContent = money.format(promotionBreakEvenDealPrice);
+  document.getElementById("promotionProfitDealLine").textContent = money.format(promotionProfitDealPrice);
+  document.getElementById("bestProfitRoi").textContent = formatRatio(bestProfitRoi);
+  document.getElementById("breakEvenBid").textContent = money.format(breakEvenBid);
+  document.getElementById("grossMarginRate").textContent = percent.format(grossMarginRate);
+  document.getElementById("flatRoi").textContent = formatRatio(flatRoi);
+  document.getElementById("breakEvenRoi").textContent = formatRatio(breakEvenRoi);
+
+  document.getElementById("breakEvenPricingFormula").textContent =
+    `不推广：${money.format(noPromotionBreakEvenDealPrice)} 最终成交价 ÷ ${percent.format(discountRate)} 成交折扣 = ${money.format(noPromotionBreakEvenListingPrice)} 拼单价。推广：${money.format(promotionBreakEvenDealPrice)} 最终成交价 ÷ ${percent.format(discountRate)} 成交折扣 = ${money.format(promotionBreakEvenListingPrice)} 拼单价。`;
+  document.getElementById("profitPricingFormula").textContent =
+    `不推广：${money.format(noPromotionProfitDealPrice)} 最终成交价 ÷ ${percent.format(discountRate)} 成交折扣 = ${money.format(noPromotionProfitListingPrice)} 拼单价。推广：${money.format(promotionProfitDealPrice)} 最终成交价 ÷ ${percent.format(discountRate)} 成交折扣 = ${money.format(promotionProfitListingPrice)} 拼单价。`;
+  document.getElementById("promotionReferenceFormula").textContent =
+    `毛利率 ${percent.format(grossMarginRate)}；持平投产比 ${formatRatio(flatRoi)}；最佳盈利投产比 ${formatRatio(bestProfitRoi)}；保本成交出价 ${money.format(breakEvenBid)}。`;
+}
+
+function calculateDouyinLogic({ targetProfit, returnRate }) {
+  const purchaseCost = numberValue("purchaseCost");
+  const shippingFee = numberValue("shippingFee");
+  const freightInsurance = numberValue("freightInsurance");
+  const couponAmount = currentCouponAmount();
+  const signedRate = 1 - returnRate;
+  const fixedOrderLoss = shippingFee + freightInsurance;
+  const returnLossShare = safeRatio(returnRate, signedRate) * fixedOrderLoss;
+  const baseCost = purchaseCost + fixedOrderLoss + returnLossShare;
+  const breakEvenDealPrice = baseCost;
+  const profitDealPrice = baseCost + targetProfit;
+  const breakEvenPlatformPrice = roundUpCent(breakEvenDealPrice + couponAmount);
+  const profitPlatformPrice = roundUpCent(profitDealPrice + couponAmount);
+
+  document.getElementById("douyinBreakEvenPlatformPrice").textContent = money.format(breakEvenPlatformPrice);
+  document.getElementById("douyinBreakEvenDealPrice").textContent = `最终成交价 ${money.format(breakEvenDealPrice)}`;
+  document.getElementById("douyinProfitPlatformPrice").textContent = money.format(profitPlatformPrice);
+  document.getElementById("douyinProfitDealPrice").textContent = `最终成交价 ${money.format(profitDealPrice)}`;
+  document.getElementById("douyinCouponLine").textContent = money.format(couponAmount);
+  document.getElementById("douyinBreakEvenDealLine").textContent = money.format(breakEvenDealPrice);
+  document.getElementById("douyinProfitDealLine").textContent = money.format(profitDealPrice);
+  document.getElementById("douyinBreakEvenFormula").textContent =
+    `${money.format(breakEvenDealPrice)} 最终成交价 + ${money.format(couponAmount)} 优惠券 = ${money.format(breakEvenPlatformPrice)} 不推广不亏本价格`;
+  document.getElementById("douyinProfitFormula").textContent =
+    `${money.format(profitDealPrice)} 最终成交价 + ${money.format(couponAmount)} 优惠券 = ${money.format(profitPlatformPrice)} 不推广带利润价格`;
 }
 
 function syncPromotionSwitch() {
@@ -611,6 +1030,39 @@ document.getElementById("promotionSwitch").addEventListener("change", () => {
   calculate();
 });
 
+document.querySelectorAll(".mini-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    const previousProfit = targetProfitValue(numberValue("purchaseCost"));
+    document.querySelectorAll(".mini-tab").forEach((item) => {
+      item.classList.toggle("active", item === tab);
+    });
+    const purchaseCost = numberValue("purchaseCost");
+    const input = document.getElementById("targetProfit");
+    if (currentProfitMode() === "percent") {
+      input.value = purchaseCost > 0 ? (previousProfit / purchaseCost * 100).toFixed(2) : "0";
+    } else {
+      input.value = previousProfit.toFixed(2);
+    }
+    syncTargetProfitMode();
+    calculate();
+  });
+});
+
+document.querySelectorAll(".logic-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    savePlatformInputValue();
+    const platformName = tab.dataset.platform;
+    document.querySelectorAll(".logic-tab").forEach((item) => {
+      item.classList.toggle("active", item.dataset.platform === platformName);
+    });
+    syncPlatformField();
+    document.getElementById("pddPanel").classList.toggle("hidden", platformName !== "pdd");
+    document.getElementById("douyinPanel").classList.toggle("hidden", platformName !== "douyin");
+    calculate();
+  });
+});
+
+syncPlatformField();
 setDefaultValues();
 
 </script>
